@@ -1,70 +1,76 @@
 """
-# My first app
-Here's our first attempt at using data to create a table:
-
-Statistics questions we want to answer!
-1. Given X chickens, what is the probability of choosing a chicken?
-2. Given I hens and J roosters, what is the probability of choosing a hen?
-3. If a hen lays an egg every k days, what is the probability of picking an egg-laying hen on
-    a given day?
-4. If the Chickens follow a religion tht prohibits egg-laying on Tuesdays, what is the probability
-    of choosing an egg-laying chicken on a given day
-5. Depending on the chicken gender and egg status, they will spend a different amount of time, T, on the nest
-    T(x) ~ N(gender U egg status) (proper notation?) Roosters spend less nest time, non-egg hens middle, egg hens most.
-
+The purpose of this app is to explore different probability distributions, their shape, and their applicatons.
+The big questions we want to answer are:
+1. How does following different distributions affect the amount of eggs laid...
+    ...over the course of one day
+    ...over the course of one week
+    ...over the course of one month
+2. How do the different variables affect egg laying? Things like:
+    * Mean
+    * Std Deviation
+    * Rate
+3. Distributions to explore:
+    * Normal
+    * Uniform
+    * Poisson
+    * Pareto
+    * Binomial (some eggs vs no eggs)
 """
 
 import streamlit as st
 from typing import Union
 import pandas as pd
 import classes.chicken as Chicken
+import numpy as np
+from numpy.random import default_rng
+import matplotlib.pyplot as plt
 
 st.write("Hello World!")
 st.write("Welcome to Chicken Statistics Hell~~~")
-hen_num = st.slider("Number of hens", 0, 100, int)
-egg_freq = st.number_input("Egg laying frequency", 0, 100, int)
-rooster_num = st.slider("Number of roosters", 0, 100, int)
+chicken_num = st.slider(
+    label="Number of chickens", 
+    min_value=0, 
+    max_value=100,
+    value=100,
+    step= 1
+    )
+threshold = st.slider(
+    label="Threshold", 
+    min_value= 0., 
+    max_value= 1., 
+    step= 0.1)
+dist = st.selectbox("Distribution", ['Uniform', 'Normal', 'Poisson', 'Pareto', 'Binomial'])
 
-def exists(x_list:list, index:int) -> bool:
-    """
-    Checks if the index i exists in the list
 
-    Parameters:
-        x_list (list[any]): the list to test
-        index (int): the index to eval
-    """
+"""
+Stuff the app should do:
+    1. User chooses the number of chickens
+    2. User chooses the liklihood a for a chicken to lay an egg in a day
+    3. The app calculates the number of eggs expected in a given day, week and month along with confidence intervals
+    4. There's an option to run an experiment and calculate the number of eggs by day, week, and month
+"""
 
-    try:
-        x = x_list[index]
-        return True
+# I have no idea how the random umber distribution affects hte number of eggs in a day, week, or momth
+# so fuck it, let's find out together!
 
-    except IndexError:
-        return False
+st.header("First let's explore a uniform distribution")
+st.write("A discrete uniform distribution looks like this:")
+generator = default_rng()
 
-    finally:
-        return False
+fig, ax = plt.subplots()
+x_points = range(0,chicken_num)
+#ax.plot(x_points, y_points)
+ax.hist(x_points, bins=int(np.ceil(chicken_num/10)),density=True)
+ax.set_xlabel("Number of Eggs laid")
+ax.set_ylabel("Probability")
+st.pyplot(fig)
 
-def init_chickens(hen_num:int, rooster_num:int, eggFreq:Union[int, list[int]], nameList:list[str] = []) -> list:
-    chicken_list = []
-    for i in range(hen_num):
-        chicken_list.append(Chicken(
-            "Hen",
-            eggFreq[i] if(eggFreq is list and exists(eggFreq, i)) else eggFreq,
-            nameList[i] if (nameList is list and exists(nameList, i)) else f"{nameList}_{i}"
-         )
-        )
-    for i in range(rooster_num):
-        chicken_list.append(Chicken(
-            "Rooster",
-            0,
-            nameList[i] if (nameList is list and exists(nameList, i)) else f"{nameList}_{i}"
-         )
-        )
-    return chicken_list
-
-df = pd.DataFrame({
-  'firstrun  column': [1, 2, 3, 4],
-  'second column': [10, 20, 30, 40]
-})
-
-df
+st.write("So, for a given day, the liklihood distribution for the number of eggs laid looks like:")
+uniform_eggs = generator.uniform(0, chicken_num, chicken_num)
+fig, ax = plt.subplots()
+count, bins, ignored = ax.hist(uniform_eggs, 15, density=True)
+#ax.plot(bins, (np.ones_like(bins)+(chicken_num/15)), linewidth=2, color='black')
+#ax.text(chicken_num/2, np.ones_like(bins), f"Ideal: {np.round(chicken_num/15, 2)}", color='black')
+ax.set_xlabel("Egg quantity")
+ax.set_ylabel("Liklohood")
+st.pyplot(fig)
